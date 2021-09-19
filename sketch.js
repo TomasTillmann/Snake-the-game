@@ -32,9 +32,10 @@ class Snake {
 	headBodyPart;
 	bodyArr;
 
-	changeDirection(direction) {
+	changeDirection(newDirection) {
 		// changes just the direction of the snake's head
-		this.headBodyPart.direction = direction;
+		let notAllowed = createVector((-1 * snake.headBodyPart.direction.x), (-1 * snake.headBodyPart.direction.y));
+		if (newDirection.x !== notAllowed.x && newDirection.y !== notAllowed.y) { this.headBodyPart.direction = newDirection; };
 	}
 
 	move() {
@@ -112,22 +113,24 @@ function draw() {
 	game.Run();
 }
 
+
 function keyPressed() {
 	if (keyCode === UP_ARROW) {
-		snake.changeDirection(createVector(0,-1));
+		newDirection = createVector(0,-1);
 	}
 
-	if (keyCode === LEFT_ARROW) {
-		snake.changeDirection(createVector(-1,0));
+	else if (keyCode === LEFT_ARROW) {
+		newDirection = createVector(-1,0);
 	}
 
-	if (keyCode === RIGHT_ARROW) {
-		snake.changeDirection(createVector(1,0));
+	else if (keyCode === RIGHT_ARROW) {
+		newDirection = createVector(1,0);
 	}
 
-	if (keyCode === DOWN_ARROW) {
-		snake.changeDirection(createVector(0,1));
+	else if (keyCode === DOWN_ARROW) {
+		newDirection = createVector(0,1);
 	}
+	snake.changeDirection(newDirection);
 }
 
 
