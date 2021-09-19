@@ -4,12 +4,17 @@ class Game {
 			case gameStates.ALIVE:
 				snake.move();
 				snake.show();
+				this.spawnFood();
 				break;
 
 			case gameStates.DEAD:
 				console.log('im dead');
 				break;
 		}
+	}
+
+	spawnFood() {
+
 	}
 }
 
@@ -42,8 +47,8 @@ class Snake {
 		// move in the specified direction
 		for(let i = 0; i < this.bodyArr.length; i++) {
 			let bodyPart = this.bodyArr[i];
-			bodyPart.position.x += bodyPart.direction.x * PIXEL_SIZE;
-			bodyPart.position.y += bodyPart.direction.y * PIXEL_SIZE;
+			bodyPart.position.x >= 0 ? bodyPart.position.x = ( bodyPart.position.x + bodyPart.direction.x * PIXEL_SIZE ) % CANVAS_WIDTH : bodyPart.position.x = CANVAS_WIDTH;
+			bodyPart.position.y >= 0 ? bodyPart.position.y = ( bodyPart.position.y + bodyPart.direction.y * PIXEL_SIZE ) % CANVAS_HEIGHT : bodyPart.position.y = CANVAS_HEIGHT;
 		}
 
 		// makes the change of the snake's head propagate further on to body parts each frame
@@ -91,7 +96,7 @@ function setup() {
 
 	CANVAS_COLOR = color(51);
 	PIXEL_BORDERS_COLOR = color(156);
-	SNAKE_COLOR = color(255,0,40);
+	SNAKE_COLOR = color(255,240,254);
 	gameState = gameStates.ALIVE;
 
 	createCanvas(CANVAS_HEIGHT, CANVAS_WIDTH);
