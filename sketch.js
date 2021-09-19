@@ -7,13 +7,13 @@ class Game {
 				break;
 
 			case gameStates.DEAD:
-				// neco neco
 				console.log('im dead');
 				break;
 		}
 	}
 }
 
+// internally used in Snake
 class BodyPart {
 	constructor(position, direction) {
 		this.position = position;
@@ -33,6 +33,7 @@ class Snake {
 	bodyArr;
 
 	changeDirection(direction) {
+		// changes just the direction of the snake's head
 		this.headBodyPart.direction = direction;
 	}
 
@@ -44,14 +45,18 @@ class Snake {
 			bodyPart.position.y += bodyPart.direction.y * PIXEL_SIZE;
 		}
 
+		// makes the change of the snake's head propagate further on to body parts each frame
 		for (let i = this.bodyArr.length-1;  i > 0; i--) {
 			let bodyPart = this.bodyArr[i];
 			let nextBodyPart = this.bodyArr[i-1];
+
+			// simply updates the bodyPart's directon to the direction of the bodyPart in front of it
 			bodyPart.direction = nextBodyPart.direction;
 		}
 	}
 
 	show() {
+		// in order to delete unwanted bodyParts from the scene
 		createCanvas(CANVAS_HEIGHT, CANVAS_WIDTH);
 		background(51);
 		noStroke();
@@ -63,7 +68,6 @@ class Snake {
 }
 
 
-let myDraw;
 let game;
 let snake;
 
@@ -91,6 +95,7 @@ function setup() {
 
 	createCanvas(CANVAS_HEIGHT, CANVAS_WIDTH);
 	background(51);
+
 	game = new Game();
 	let snakeBody = [
 		new BodyPart(createVector(CANVAS_WIDTH - 5*PIXEL_SIZE, CANVAS_HEIGHT / 2), createVector(-1,0)),
@@ -105,8 +110,6 @@ function setup() {
 
 function draw() {
 	game.Run();
-	
-
 }
 
 function keyPressed() {
