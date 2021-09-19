@@ -9,6 +9,8 @@ class Game {
 
 	foodPosition;
 
+	// handles game states
+	// manages game flow
 	Run() {
 		switch (gameState) {
 			case gameStates.ALIVE:
@@ -34,14 +36,14 @@ class Game {
 			snake.grow();
 		}
 
-		// draws the food continously
-		// has to be done, because the scene is refreshed each frame (done in snake.move())
-		fill(240,100,100);
+		// draws food continously,
+		// because the scene is refreshed each frame (done in snake.move())
+		fill(FOOD_COLOR);
 		noStroke();
 		rect(this.foodPosition.x, this.foodPosition.y, PIXEL_SIZE, PIXEL_SIZE);
 	}
 
-	// returns the closest multiple of givenNumber
+	// returns the closest multiple of a givenNumber
 	// used in order to spawn food on PIXEL_SIZE grid
 	findClosestMultiple(givenNumber, multipleOf) {
 		let closestMultiple;
@@ -74,15 +76,16 @@ class Snake {
 	tailBodyPart;
 	bodyArr;
 
+	// changes just the direction of the snake's head
+	// rest is done in snake.move()
 	changeDirection(newDirection) {
-		// changes just the direction of the snake's head
-		// rest is done in snake.move()
+		// it is not allowed to move backwards
 		let notAllowed = createVector((-1 * snake.headBodyPart.direction.x), (-1 * snake.headBodyPart.direction.y));
 		if (newDirection.x !== notAllowed.x && newDirection.y !== notAllowed.y) { this.headBodyPart.direction = newDirection; };
 	}
 
 	grow() {
-		// spawns a new tail on a correct position every time a food is eaten
+		// spawns a new tail on a correct position with correct direction
 		let newTailBodyPart = new BodyPart(
 			createVector(
 				this.tailBodyPart.position.x + (-1 * this.tailBodyPart.direction.x * PIXEL_SIZE),
@@ -117,6 +120,7 @@ class Snake {
 		// in order to delete unwanted bodyParts from the scene
 		createCanvas(CANVAS_HEIGHT, CANVAS_WIDTH);
 
+		// draws the snake
 		background(57,42,69);
 		noStroke();
 		fill(SNAKE_COLOR);
@@ -139,17 +143,17 @@ let CANVAS_WIDTH;
 let PIXEL_SIZE; 
 
 let CANVAS_COLOR; 
-let PIXEL_BORDERS_COLOR;
 let SNAKE_COLOR;
+let FOOD_COLOR;
 
 function setup() {
-	CANVAS_HEIGHT = 600;
-	CANVAS_WIDTH = 600;
+	CANVAS_HEIGHT = 800;
+	CANVAS_WIDTH = 800;
 	PIXEL_SIZE = 20;
 
 	CANVAS_COLOR = color(51);
-	PIXEL_BORDERS_COLOR = color(156);
 	SNAKE_COLOR = color(255,240,254);
+	FOOD_COLOR = color(255,148,46);
 
 
 	frameRate(10);
@@ -165,7 +169,7 @@ function setup() {
 		new BodyPart(createVector(CANVAS_WIDTH - 3*PIXEL_SIZE, CANVAS_HEIGHT / 2), createVector(-1,0)),
 		new BodyPart(createVector(CANVAS_WIDTH - 2*PIXEL_SIZE, CANVAS_HEIGHT / 2), createVector(-1,0)),
 	];
-	snake = new Snake(snakeBody, 400);
+	snake = new Snake(snakeBody);
 }
 
 function draw() {
@@ -192,8 +196,3 @@ function keyPressed() {
 
 	snake.changeDirection(newDirection);
 }
-
-
-
-
-
