@@ -1,4 +1,10 @@
 class Game {
+	constructor() {
+		this.foodPosition = createVector(CANVAS_HEIGHT / 2,CANVAS_WIDTH / 2);
+	}
+
+	foodPosition;
+
 	Run() {
 		switch (gameState) {
 			case gameStates.ALIVE:
@@ -14,6 +20,27 @@ class Game {
 	}
 
 	spawnFood() {
+		if (snake.headBodyPart.position.x === this.foodPosition.x && snake.headBodyPart.position.y === this.foodPosition.y) {
+			console.log('food eaten');
+			this.foodPosition = createVector(
+					this.findClosestMultiple(floor(random(CANVAS_WIDTH)), PIXEL_SIZE),
+					this.findClosestMultiple(floor(random(CANVAS_HEIGHT)), PIXEL_SIZE)
+					);
+		}
+
+		fill(240,100,100);
+		noStroke();
+		rect(this.foodPosition.x, this.foodPosition.y, PIXEL_SIZE, PIXEL_SIZE);
+	}
+
+	findClosestMultiple(givenNumber, multipleOf) {
+		let closestMultiple;
+		let downFloor = ( givenNumber % multipleOf ) * multipleOf;
+		let upFloor = downFloor + multipleOf; 
+
+		abs( givenNumber - downFloor ) > abs( givenNumber - upFloor ) ? closestMultiple = upFloor : closestMultiple = downFloor;
+		return closestMultiple;
+
 
 	}
 }
@@ -47,8 +74,8 @@ class Snake {
 		// move in the specified direction
 		for(let i = 0; i < this.bodyArr.length; i++) {
 			let bodyPart = this.bodyArr[i];
-			bodyPart.position.x >= 0 ? bodyPart.position.x = ( bodyPart.position.x + bodyPart.direction.x * PIXEL_SIZE ) % CANVAS_WIDTH : bodyPart.position.x = CANVAS_WIDTH;
-			bodyPart.position.y >= 0 ? bodyPart.position.y = ( bodyPart.position.y + bodyPart.direction.y * PIXEL_SIZE ) % CANVAS_HEIGHT : bodyPart.position.y = CANVAS_HEIGHT;
+			bodyPart.position.x >= 0 ? bodyPart.position.x = ( bodyPart.position.x + bodyPart.direction.x * PIXEL_SIZE ) % CANVAS_WIDTH : bodyPart.position.x = CANVAS_WIDTH - PIXEL_SIZE;
+			bodyPart.position.y >= 0 ? bodyPart.position.y = ( bodyPart.position.y + bodyPart.direction.y * PIXEL_SIZE ) % CANVAS_HEIGHT : bodyPart.position.y = CANVAS_HEIGHT - PIXEL_SIZE;
 		}
 
 		// makes the change of the snake's head propagate further on to body parts each frame
