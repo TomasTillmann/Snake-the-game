@@ -7,8 +7,12 @@ class Game {
 			);
 
 		this.snake = snake;
+		this.wallSet = [];
 	}
 
+
+	wallSet;
+	wallPosition;
 	foodPosition;
 	snake;
 
@@ -20,6 +24,12 @@ class Game {
 				this.snake.show();
 				this.snake.isCollision();
 				this.spawnFood();
+				this.showWalls();
+				break;
+			
+			case gameStates.EDIT:
+				frameRate(60);
+				this.showWalls();
 				this.addWalls();
 				break;
 
@@ -38,18 +48,40 @@ class Game {
 		];
 
 		this.snake = new Snake(snakeBody);
+		this.createFoodPosition();
 		NEW_DIRECTION = createVector(-1,0);
 
 		GAME_STATE = gameStates.ALIVE;
 	}
 
+	createFoodPosition() {
+		this.foodPosition = createVector(
+			this.findClosestMultiple(floor(random(CANVAS_WIDTH)), PIXEL_SIZE),
+			this.findClosestMultiple(floor(random(CANVAS_HEIGHT)), PIXEL_SIZE)
+			);
+	}
+
+	checkFoodPosition() {
+		let notValid = false;
+		for (let i = 0; i < GAME.wallSet.length; i++) {
+			let wall = GAME.wallSet[i];
+			if (this.foodPosition.x === wall.x && this.foodPosition.y === wall.y) {
+				notValid = true;
+				console.log(`${wall.x}, ${wall.y}`);
+				break;
+			}
+		}
+		return notValid;
+	}
+
 	spawnFood() {
 		// if snake's head has the same position as food
 		if (this.snake.headBodyPart.position.x === this.foodPosition.x && this.snake.headBodyPart.position.y === this.foodPosition.y) {
-			this.foodPosition = createVector(
-					this.findClosestMultiple(floor(random(CANVAS_WIDTH)), PIXEL_SIZE),
-					this.findClosestMultiple(floor(random(CANVAS_HEIGHT)), PIXEL_SIZE)
-					);
+			do {
+				this.createFoodPosition();
+				console.log("dfsdf");
+			}
+			while (this.checkFoodPosition());
 			
 			this.snake.grow();
 		}
@@ -61,15 +93,19 @@ class Game {
 
 	addWalls() {
 		//let wallPosition = createVector(floor(mouseX), floor(mouseY));
-		if ( mouseIsPressed) {
-			let wallPosition = createVector(this.findClosestMultiple(floor(mouseX), PIXEL_SIZE), this.findClosestMultiple(floor(mouseY), PIXEL_SIZE));
-			console.log(`MOUSE: ${mouseX} ${mouseY}  WALL: ${wallPosition.x}, ${wallPosition.y}`);
-			fill(color(200));
-			noStroke();
-			rect(wallPosition.x, wallPosition.y, PIXEL_SIZE);
+		if (mouseIsPressed) {
+			this.wallPosition = createVector(this.findClosestMultiple(mouseX, PIXEL_SIZE), this.findClosestMultiple(mouseY, PIXEL_SIZE));
+			// console.log(`MOUSE: ${mouseX} ${mouseY}  WALL: ${wallPosition.x}, ${wallPosition.y}`);
+			this.wallSet.push(this.wallPosition);
 		}
-		
+	}
 
+	showWalls() {
+		for (let wall of this.wallSet) {
+			fill(200);
+			noStroke();
+			rect(wall.x, wall.y, PIXEL_SIZE);
+		}
 	}
 
 	// returns the closest multiple of a givenNumber
@@ -111,13 +147,20 @@ class Snake {
 
 	isCollision() {
 		// console.log(`head_x: ${this.headBodyPart.position.x} head_y: ${this.headBodyPart.position.y}`);
+		// checks if some of snake's bodyPart has same coordinates as it's head -> collision
 		this.bodyArr.slice(1).forEach(bodyPart => {
 			// console.log(`x: ${bodyPart.position.x} y: ${bodyPart.position.y}`);
-			if (this.headBodyPart.position.x === bodyPart.position.x && this.headBodyPart.position.y === bodyPart.position.y) {
+			if ( this.headBodyPart.position.x === bodyPart.position.x && this.headBodyPart.position.y === bodyPart.position.y ) {
 				GAME_STATE = gameStates.DEAD;
 			}
 		});
-		// console.log();
+
+		// checks whether snake's head and a wall have same coordinates
+		GAME.wallSet.forEach(wall => {
+			if ( this.headBodyPart.position.x === wall.x && this.headBodyPart.position.y === wall.y ) {
+				GAME_STATE = gameStates.DEAD;
+			}
+		});
 	}
 
 	grow() {
@@ -164,7 +207,7 @@ class Snake {
 }
 
 
-const gameStates = {DEAD: 0, ALIVE: 1};
+const gameStates = {DEAD : 0, ALIVE : 1, EDIT : 2};
 
 let GAME;
 let GAME_STATE;

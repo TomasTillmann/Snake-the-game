@@ -2,19 +2,27 @@
 <html lang="">
 
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Snake the Game</title>
-  <script src="../p5.js"></script>
-  <!-- <script src="../addons/p5.sound.js"></script> -->
-  <script src="sketch.js"></script>
-  <link rel="stylesheet" href="style.css">
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Snake the Game</title>
+	<!-- p5 library -->>
+	<script src="../p5.js"></script>
+
+	<!-- my scripts-->
+	<script async src="sketch.js"></script>
+	<script defer src="listeners.js"></script>
+
+	<!-- <script src="../addons/p5.sound.js"></script> -->
+	<link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 	<div class="canvasContainer">
 		<div id="canvas"></div>
 	</div>
+
+	<button id="playMode">PLAY!</button>
+	<button id="editMode">EDIT!</button>
 </body>
 
 </html>
