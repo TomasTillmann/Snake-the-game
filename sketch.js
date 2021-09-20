@@ -36,8 +36,8 @@ class Game {
 			snake.grow();
 		}
 
-		// draws food continously,
-		// because the scene is refreshed each frame (done in snake.move())
+
+		// WRONG COMMIT
 		fill(FOOD_COLOR);
 		noStroke();
 		rect(this.foodPosition.x, this.foodPosition.y, PIXEL_SIZE, PIXEL_SIZE);
