@@ -173,6 +173,7 @@ function draw() {
 }
 
 // unfortuntely, has to be run globally -> cannot be put inside a class for example
+let newDirection;
 function keyPressed() {
 	if (keyCode === UP_ARROW) {
 		newDirection = createVector(0,-1);
