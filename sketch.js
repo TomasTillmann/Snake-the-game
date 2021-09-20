@@ -1,15 +1,10 @@
 class Game {
 	// first time when the food is spawned on the scene
 	constructor(snake) {
-		this.foodPosition = createVector(
-			this.findClosestMultiple(floor(random(CANVAS_WIDTH)), PIXEL_SIZE),
-			this.findClosestMultiple(floor(random(CANVAS_HEIGHT)), PIXEL_SIZE)
-			);
-
 		this.snake = snake;
 		this.wallSet = [];
+		this.spawnFood();
 	}
-
 
 	wallSet;
 	wallPosition;
@@ -23,12 +18,13 @@ class Game {
 				this.snake.Move();
 				this.snake.Show();
 				this.snake.IsCollision();
-				this.spawnFood();
+				this.FoodEaten();
 				this.ShowWalls();
 				break;
 			
 			case gameStates.EDIT:
-				frameRate(60);
+				background(CANVAS_COLOR);
+				frameRate(144);
 				this.ShowWalls();
 				this.AddWalls();
 				break;
@@ -48,7 +44,7 @@ class Game {
 		];
 
 		this.snake = new Snake(snakeBody);
-		this.createFoodPosition();
+		this.spawnFood();
 		NEW_DIRECTION = createVector(-1,0);
 
 		GAME_STATE = gameStates.ALIVE;
@@ -57,9 +53,24 @@ class Game {
 	AddWalls() {
 		//let wallPosition = createVector(floor(mouseX), floor(mouseY));
 		if (mouseIsPressed) {
-			this.wallPosition = createVector(this.findClosestMultiple(mouseX, PIXEL_SIZE), this.findClosestMultiple(mouseY, PIXEL_SIZE));
-			// console.log(`MOUSE: ${mouseX} ${mouseY}  WALL: ${wallPosition.x}, ${wallPosition.y}`);
-			this.wallSet.push(this.wallPosition);
+			this.mousePositionInGrid = createVector(this.findClosestMultiple(mouseX, PIXEL_SIZE), this.findClosestMultiple(mouseY, PIXEL_SIZE));
+			if (mouseButton === LEFT) {
+				this.wallSet.push(this.mousePositionInGrid);
+			}
+
+			if (mouseButton === CENTER) {
+				for (let i = 0; i < this.wallSet.length; i++) {
+					let wall = this.wallSet[i];
+					if (this.mousePositionInGrid.x === wall.x && this.mousePositionInGrid.y === wall.y) {
+						this.wallSet.pop(i);
+						break;
+					}
+				}
+
+				fill(color(0,255,255));
+				noStroke();
+				rect(this.mousePositionInGrid.x, this.mousePositionInGrid.y, PIXEL_SIZE);
+			}
 		}
 	}
 
@@ -71,17 +82,33 @@ class Game {
 		}
 	}
 
-	createFoodPosition() {
-		this.foodPosition = createVector(
-			this.findClosestMultiple(floor(random(CANVAS_WIDTH)), PIXEL_SIZE),
-			this.findClosestMultiple(floor(random(CANVAS_HEIGHT)), PIXEL_SIZE)
+	FoodEaten() {
+		// if snake's head has the same position as food
+		if (this.snake.headBodyPart.position.x === this.foodPosition.x && this.snake.headBodyPart.position.y === this.foodPosition.y) {
+			this.spawnFood();
+			this.snake.Grow();
+		}
+
+		fill(FOOD_COLOR);
+		noStroke();
+		rect(this.foodPosition.x, this.foodPosition.y, PIXEL_SIZE, PIXEL_SIZE);
+	}
+
+
+	spawnFood() {
+		do {
+			this.foodPosition = createVector(
+				this.findClosestMultiple(floor(random(CANVAS_WIDTH - PIXEL_SIZE)), PIXEL_SIZE),
+				this.findClosestMultiple(floor(random(CANVAS_HEIGHT - PIXEL_SIZE)), PIXEL_SIZE)
 			);
+		}
+		while (this.checkFoodPosition());
 	}
 
 	checkFoodPosition() {
 		let notValid = false;
-		for (let i = 0; i < GAME.wallSet.length; i++) {
-			let wall = GAME.wallSet[i];
+		for (let i = 0; i < this.wallSet.length; i++) {
+			let wall = this.wallSet[i];
 			if (this.foodPosition.x === wall.x && this.foodPosition.y === wall.y) {
 				notValid = true;
 				break;
@@ -90,21 +117,6 @@ class Game {
 		return notValid;
 	}
 
-	spawnFood() {
-		// if snake's head has the same position as food
-		if (this.snake.headBodyPart.position.x === this.foodPosition.x && this.snake.headBodyPart.position.y === this.foodPosition.y) {
-			do {
-				this.createFoodPosition();
-			}
-			while (this.checkFoodPosition());
-			
-			this.snake.Grow();
-		}
-
-		fill(FOOD_COLOR);
-		noStroke();
-		rect(this.foodPosition.x, this.foodPosition.y, PIXEL_SIZE, PIXEL_SIZE);
-	}
 
 
 	// returns the closest multiple of a givenNumber
@@ -196,7 +208,7 @@ class Snake {
 
 	Show() {
 		// draws the snake
-		background(57,42,69);
+		background(CANVAS_COLOR);
 		noStroke();
 		fill(SNAKE_COLOR);
 		this.bodyArr.forEach(bodyPart => {
@@ -228,7 +240,7 @@ function setup() {
 	CANVAS_WIDTH = 600;
 	PIXEL_SIZE = 20;
 
-	CANVAS_COLOR = color(51);
+	CANVAS_COLOR = color(57,42,69);
 	SNAKE_COLOR = color(255,240,254);
 	FOOD_COLOR = color(255,148,46);
 
@@ -237,7 +249,7 @@ function setup() {
 	GAME_STATE = gameStates.ALIVE;
 
 	createCanvas(CANVAS_HEIGHT, CANVAS_WIDTH);
-	background(51);
+	background(CANVAS_COLOR);
 
 	let snakeBody = [
 		new BodyPart(createVector(CANVAS_WIDTH - 5*PIXEL_SIZE, CANVAS_HEIGHT / 2), createVector(-1,0)),
@@ -272,7 +284,7 @@ function keyPressed() {
 		NEW_DIRECTION = createVector(0,1);
 	}
 
-	else if (keyCode == ENTER && GAME_STATE === gameStates.DEAD) {
+	else if (keyCode == ENTER) {
 		GAME.RestartScene();
 	}
 
