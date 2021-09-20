@@ -1,43 +1,58 @@
 class Game {
 	// first time when the food is spawned on the scene
-	constructor() {
+	constructor(snake) {
 		this.foodPosition = createVector(
 			this.findClosestMultiple(floor(random(CANVAS_WIDTH)), PIXEL_SIZE),
 			this.findClosestMultiple(floor(random(CANVAS_HEIGHT)), PIXEL_SIZE)
 			);
+
+		this.snake = snake;
 	}
 
 	foodPosition;
+	snake;
 
 	// manages game flow
 	Run() {
-		switch (gameState) {
+		switch (GAME_STATE) {
 			case gameStates.ALIVE:
-				snake.move();
-				snake.show();
-				snake.isCollision();
+				this.snake.move();
+				this.snake.show();
+				this.snake.isCollision();
 				this.spawnFood();
 				break;
 
 			case gameStates.DEAD:
-				console.log('im dead');
+				// empty, it is sufficient enough not to run any functions in case ALIVE
 				break;
 		}
 	}
 
+	restartScene() {
+		let snakeBody = [
+			new BodyPart(createVector(CANVAS_WIDTH - 5*PIXEL_SIZE, CANVAS_HEIGHT / 2), createVector(-1,0)),
+			new BodyPart(createVector(CANVAS_WIDTH - 4*PIXEL_SIZE, CANVAS_HEIGHT / 2), createVector(-1,0)),
+			new BodyPart(createVector(CANVAS_WIDTH - 3*PIXEL_SIZE, CANVAS_HEIGHT / 2), createVector(-1,0)),
+			new BodyPart(createVector(CANVAS_WIDTH - 2*PIXEL_SIZE, CANVAS_HEIGHT / 2), createVector(-1,0)),
+		];
+
+		this.snake = new Snake(snakeBody);
+		NEW_DIRECTION = createVector(-1,0);
+
+		GAME_STATE = gameStates.ALIVE;
+	}
+
 	spawnFood() {
 		// if snake's head has the same position as food
-		if (snake.headBodyPart.position.x === this.foodPosition.x && snake.headBodyPart.position.y === this.foodPosition.y) {
+		if (this.snake.headBodyPart.position.x === this.foodPosition.x && this.snake.headBodyPart.position.y === this.foodPosition.y) {
 			this.foodPosition = createVector(
 					this.findClosestMultiple(floor(random(CANVAS_WIDTH)), PIXEL_SIZE),
 					this.findClosestMultiple(floor(random(CANVAS_HEIGHT)), PIXEL_SIZE)
 					);
 			
-			snake.grow();
+			this.snake.grow();
 		}
 
-
-		// WRONG COMMIT
 		fill(FOOD_COLOR);
 		noStroke();
 		rect(this.foodPosition.x, this.foodPosition.y, PIXEL_SIZE, PIXEL_SIZE);
@@ -61,26 +76,22 @@ class BodyPart {
 		this.position = position;
 		this.direction = direction;
 	}
-	position;
-	direction;
 }
 
 class Snake {
-	constructor(bodyArr, speed) {
+	constructor(bodyArr) {
 		this.headBodyPart = bodyArr[0];
 		this.bodyArr = bodyArr;
-		this.tailBodyPart = bodyArr[bodyArr.length-1];
 	}
 
 	headBodyPart;
-	tailBodyPart;
 	bodyArr;
 
 	// changes just the direction of the snake's head
 	// rest is done in snake.move()
 	changeDirection(newDirection) {
 		// it is not allowed to move backwards
-		let notAllowed = createVector((-1 * snake.headBodyPart.direction.x), (-1 * snake.headBodyPart.direction.y));
+		let notAllowed = createVector((-1 * this.headBodyPart.direction.x), (-1 * this.headBodyPart.direction.y));
 		if (newDirection.x !== notAllowed.x && newDirection.y !== notAllowed.y) { this.headBodyPart.direction = newDirection; };
 	}
 
@@ -89,7 +100,7 @@ class Snake {
 		this.bodyArr.slice(1).forEach(bodyPart => {
 			// console.log(`x: ${bodyPart.position.x} y: ${bodyPart.position.y}`);
 			if (this.headBodyPart.position.x === bodyPart.position.x && this.headBodyPart.position.y === bodyPart.position.y) {
-				gameState = gameStates.DEAD;
+				GAME_STATE = gameStates.DEAD;
 			}
 		});
 		// console.log();
@@ -97,16 +108,16 @@ class Snake {
 
 	grow() {
 		// spawns a new tail on a correct position with correct direction
+		let tailBodyPart = this.bodyArr[this.bodyArr.length-1];
 		let newTailBodyPart = new BodyPart(
 			createVector(
-				this.tailBodyPart.position.x + (-1 * this.tailBodyPart.direction.x * PIXEL_SIZE),
-				this.tailBodyPart.position.y + (-1 * this.tailBodyPart.direction.y * PIXEL_SIZE)
+				tailBodyPart.position.x + (-1 * tailBodyPart.direction.x * PIXEL_SIZE),
+				tailBodyPart.position.y + (-1 * tailBodyPart.direction.y * PIXEL_SIZE)
 			),
-			this.tailBodyPart.direction
+			tailBodyPart.direction
 		);
 
 		this.bodyArr.push(newTailBodyPart);
-		this.tailBodyPart = newTailBodyPart;
 	}
 
 	move() {
@@ -139,12 +150,12 @@ class Snake {
 }
 
 
-let game;
-let snake;
-
 const gameStates = {DEAD: 0, ALIVE: 1};
-let gameState;
-let newDirection;
+
+let GAME;
+let GAME_STATE;
+// has to be global, because keyPressed() is global
+let NEW_DIRECTION;
 
 // GLOBALS, CAN BE TWEAKED OPTIONALLY
 let CANVAS_HEIGHT;
@@ -154,6 +165,7 @@ let PIXEL_SIZE;
 let CANVAS_COLOR; 
 let SNAKE_COLOR;
 let FOOD_COLOR;
+
 
 function setup() {
 	CANVAS_HEIGHT = 600;
@@ -166,43 +178,47 @@ function setup() {
 
 
 	frameRate(10);
-	gameState = gameStates.ALIVE;
+	GAME_STATE = gameStates.ALIVE;
 
 	createCanvas(CANVAS_HEIGHT, CANVAS_WIDTH);
 	background(51);
 
-	game = new Game();
 	let snakeBody = [
 		new BodyPart(createVector(CANVAS_WIDTH - 5*PIXEL_SIZE, CANVAS_HEIGHT / 2), createVector(-1,0)),
 		new BodyPart(createVector(CANVAS_WIDTH - 4*PIXEL_SIZE, CANVAS_HEIGHT / 2), createVector(-1,0)),
 		new BodyPart(createVector(CANVAS_WIDTH - 3*PIXEL_SIZE, CANVAS_HEIGHT / 2), createVector(-1,0)),
 		new BodyPart(createVector(CANVAS_WIDTH - 2*PIXEL_SIZE, CANVAS_HEIGHT / 2), createVector(-1,0)),
 	];
-	snake = new Snake(snakeBody);
-	newDirection = createVector(-1,0);
+
+	GAME = new Game(new Snake(snakeBody));
+	NEW_DIRECTION = createVector(-1,0);
 }
 
 function draw() {
-	game.Run();
+	GAME.Run();
 }
 
 // unfortuntely, has to be run globally -> cannot be put inside a class for example
 function keyPressed() {
 	if (keyCode === UP_ARROW) {
-		newDirection = createVector(0,-1);
+		NEW_DIRECTION = createVector(0,-1);
 	}
 
 	else if (keyCode === LEFT_ARROW) {
-		newDirection = createVector(-1,0);
+		NEW_DIRECTION = createVector(-1,0);
 	}
 
 	else if (keyCode === RIGHT_ARROW) {
-		newDirection = createVector(1,0);
+		NEW_DIRECTION = createVector(1,0);
 	}
 
 	else if (keyCode === DOWN_ARROW) {
-		newDirection = createVector(0,1);
+		NEW_DIRECTION = createVector(0,1);
 	}
 
-	snake.changeDirection(newDirection);
+	else if (keyCode == ENTER && GAME_STATE === gameStates.DEAD) {
+		GAME.restartScene();
+	}
+
+	GAME.snake.changeDirection(NEW_DIRECTION);
 }
