@@ -9,7 +9,6 @@ class Game {
 
 	foodPosition;
 
-	// handles game states
 	// manages game flow
 	Run() {
 		switch (gameState) {
