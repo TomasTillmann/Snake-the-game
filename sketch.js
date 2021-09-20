@@ -15,6 +15,7 @@ class Game {
 			case gameStates.ALIVE:
 				snake.move();
 				snake.show();
+				snake.isCollision();
 				this.spawnFood();
 				break;
 
@@ -83,6 +84,17 @@ class Snake {
 		if (newDirection.x !== notAllowed.x && newDirection.y !== notAllowed.y) { this.headBodyPart.direction = newDirection; };
 	}
 
+	isCollision() {
+		// console.log(`head_x: ${this.headBodyPart.position.x} head_y: ${this.headBodyPart.position.y}`);
+		this.bodyArr.slice(1).forEach(bodyPart => {
+			// console.log(`x: ${bodyPart.position.x} y: ${bodyPart.position.y}`);
+			if (this.headBodyPart.position.x === bodyPart.position.x && this.headBodyPart.position.y === bodyPart.position.y) {
+				gameState = gameStates.DEAD;
+			}
+		});
+		// console.log();
+	}
+
 	grow() {
 		// spawns a new tail on a correct position with correct direction
 		let newTailBodyPart = new BodyPart(
@@ -132,6 +144,7 @@ let snake;
 
 const gameStates = {DEAD: 0, ALIVE: 1};
 let gameState;
+let newDirection;
 
 // GLOBALS, CAN BE TWEAKED OPTIONALLY
 let CANVAS_HEIGHT;
@@ -166,6 +179,7 @@ function setup() {
 		new BodyPart(createVector(CANVAS_WIDTH - 2*PIXEL_SIZE, CANVAS_HEIGHT / 2), createVector(-1,0)),
 	];
 	snake = new Snake(snakeBody);
+	newDirection = createVector(-1,0);
 }
 
 function draw() {
@@ -173,7 +187,6 @@ function draw() {
 }
 
 // unfortuntely, has to be run globally -> cannot be put inside a class for example
-let newDirection;
 function keyPressed() {
 	if (keyCode === UP_ARROW) {
 		newDirection = createVector(0,-1);
