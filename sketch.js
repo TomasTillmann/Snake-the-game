@@ -117,9 +117,6 @@ class Snake {
 	}
 
 	show() {
-		// in order to delete unwanted bodyParts from the scene
-		createCanvas(CANVAS_HEIGHT, CANVAS_WIDTH);
-
 		// draws the snake
 		background(57,42,69);
 		noStroke();
@@ -147,8 +144,8 @@ let SNAKE_COLOR;
 let FOOD_COLOR;
 
 function setup() {
-	CANVAS_HEIGHT = 800;
-	CANVAS_WIDTH = 800;
+	CANVAS_HEIGHT = 600;
+	CANVAS_WIDTH = 600;
 	PIXEL_SIZE = 20;
 
 	CANVAS_COLOR = color(51);
