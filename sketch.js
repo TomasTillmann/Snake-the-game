@@ -20,17 +20,17 @@ class Game {
 	Run() {
 		switch (GAME_STATE) {
 			case gameStates.ALIVE:
-				this.snake.move();
-				this.snake.show();
-				this.snake.isCollision();
+				this.snake.Move();
+				this.snake.Show();
+				this.snake.IsCollision();
 				this.spawnFood();
-				this.showWalls();
+				this.ShowWalls();
 				break;
 			
 			case gameStates.EDIT:
 				frameRate(60);
-				this.showWalls();
-				this.addWalls();
+				this.ShowWalls();
+				this.AddWalls();
 				break;
 
 			case gameStates.DEAD:
@@ -39,7 +39,7 @@ class Game {
 		}
 	}
 
-	restartScene() {
+	RestartScene() {
 		let snakeBody = [
 			new BodyPart(createVector(CANVAS_WIDTH - 5*PIXEL_SIZE, CANVAS_HEIGHT / 2), createVector(-1,0)),
 			new BodyPart(createVector(CANVAS_WIDTH - 4*PIXEL_SIZE, CANVAS_HEIGHT / 2), createVector(-1,0)),
@@ -52,6 +52,23 @@ class Game {
 		NEW_DIRECTION = createVector(-1,0);
 
 		GAME_STATE = gameStates.ALIVE;
+	}
+
+	AddWalls() {
+		//let wallPosition = createVector(floor(mouseX), floor(mouseY));
+		if (mouseIsPressed) {
+			this.wallPosition = createVector(this.findClosestMultiple(mouseX, PIXEL_SIZE), this.findClosestMultiple(mouseY, PIXEL_SIZE));
+			// console.log(`MOUSE: ${mouseX} ${mouseY}  WALL: ${wallPosition.x}, ${wallPosition.y}`);
+			this.wallSet.push(this.wallPosition);
+		}
+	}
+
+	ShowWalls() {
+		for (let wall of this.wallSet) {
+			fill(200);
+			noStroke();
+			rect(wall.x, wall.y, PIXEL_SIZE);
+		}
 	}
 
 	createFoodPosition() {
@@ -67,7 +84,6 @@ class Game {
 			let wall = GAME.wallSet[i];
 			if (this.foodPosition.x === wall.x && this.foodPosition.y === wall.y) {
 				notValid = true;
-				console.log(`${wall.x}, ${wall.y}`);
 				break;
 			}
 		}
@@ -79,11 +95,10 @@ class Game {
 		if (this.snake.headBodyPart.position.x === this.foodPosition.x && this.snake.headBodyPart.position.y === this.foodPosition.y) {
 			do {
 				this.createFoodPosition();
-				console.log("dfsdf");
 			}
 			while (this.checkFoodPosition());
 			
-			this.snake.grow();
+			this.snake.Grow();
 		}
 
 		fill(FOOD_COLOR);
@@ -91,22 +106,6 @@ class Game {
 		rect(this.foodPosition.x, this.foodPosition.y, PIXEL_SIZE, PIXEL_SIZE);
 	}
 
-	addWalls() {
-		//let wallPosition = createVector(floor(mouseX), floor(mouseY));
-		if (mouseIsPressed) {
-			this.wallPosition = createVector(this.findClosestMultiple(mouseX, PIXEL_SIZE), this.findClosestMultiple(mouseY, PIXEL_SIZE));
-			// console.log(`MOUSE: ${mouseX} ${mouseY}  WALL: ${wallPosition.x}, ${wallPosition.y}`);
-			this.wallSet.push(this.wallPosition);
-		}
-	}
-
-	showWalls() {
-		for (let wall of this.wallSet) {
-			fill(200);
-			noStroke();
-			rect(wall.x, wall.y, PIXEL_SIZE);
-		}
-	}
 
 	// returns the closest multiple of a givenNumber
 	// used in order to spawn food on PIXEL_SIZE grid
@@ -139,13 +138,13 @@ class Snake {
 
 	// changes just the direction of the snake's head
 	// rest is done in snake.move()
-	changeDirection(newDirection) {
+	ChangeDirection(newDirection) {
 		// it is not allowed to move backwards
 		let notAllowed = createVector((-1 * this.headBodyPart.direction.x), (-1 * this.headBodyPart.direction.y));
 		if (newDirection.x !== notAllowed.x && newDirection.y !== notAllowed.y) { this.headBodyPart.direction = newDirection; };
 	}
 
-	isCollision() {
+	IsCollision() {
 		// console.log(`head_x: ${this.headBodyPart.position.x} head_y: ${this.headBodyPart.position.y}`);
 		// checks if some of snake's bodyPart has same coordinates as it's head -> collision
 		this.bodyArr.slice(1).forEach(bodyPart => {
@@ -163,7 +162,7 @@ class Snake {
 		});
 	}
 
-	grow() {
+	Grow() {
 		// spawns a new tail on a correct position with correct direction
 		let tailBodyPart = this.bodyArr[this.bodyArr.length-1];
 		let newTailBodyPart = new BodyPart(
@@ -177,7 +176,7 @@ class Snake {
 		this.bodyArr.push(newTailBodyPart);
 	}
 
-	move() {
+	Move() {
 		// move in the specified direction
 		for(let i = 0; i < this.bodyArr.length; i++) {
 			let bodyPart = this.bodyArr[i];
@@ -195,7 +194,7 @@ class Snake {
 		}
 	}
 
-	show() {
+	Show() {
 		// draws the snake
 		background(57,42,69);
 		noStroke();
@@ -274,8 +273,8 @@ function keyPressed() {
 	}
 
 	else if (keyCode == ENTER && GAME_STATE === gameStates.DEAD) {
-		GAME.restartScene();
+		GAME.RestartScene();
 	}
 
-	GAME.snake.changeDirection(NEW_DIRECTION);
+	GAME.snake.ChangeDirection(NEW_DIRECTION);
 }

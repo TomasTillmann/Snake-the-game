@@ -5,6 +5,6 @@ document.getElementById('editMode').onclick = function() {
 
 document.getElementById('playMode').onclick = function() {
 	frameRate(10);
-	GAME.restartScene();
+	GAME.RestartScene();
 	GAME_STATE = gameStates.ALIVE;
 }
