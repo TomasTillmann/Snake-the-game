@@ -5,4 +5,5 @@
 * customize the web page a little
   * center the canvas
   * make canvas responsive
+* add sounds
 

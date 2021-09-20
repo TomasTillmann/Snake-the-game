@@ -20,6 +20,7 @@ class Game {
 				this.snake.show();
 				this.snake.isCollision();
 				this.spawnFood();
+				this.addWalls();
 				break;
 
 			case gameStates.DEAD:
@@ -58,11 +59,24 @@ class Game {
 		rect(this.foodPosition.x, this.foodPosition.y, PIXEL_SIZE, PIXEL_SIZE);
 	}
 
+	addWalls() {
+		//let wallPosition = createVector(floor(mouseX), floor(mouseY));
+		if ( mouseIsPressed) {
+			let wallPosition = createVector(this.findClosestMultiple(floor(mouseX), PIXEL_SIZE), this.findClosestMultiple(floor(mouseY), PIXEL_SIZE));
+			console.log(`MOUSE: ${mouseX} ${mouseY}  WALL: ${wallPosition.x}, ${wallPosition.y}`);
+			fill(color(200));
+			noStroke();
+			rect(wallPosition.x, wallPosition.y, PIXEL_SIZE);
+		}
+		
+
+	}
+
 	// returns the closest multiple of a givenNumber
 	// used in order to spawn food on PIXEL_SIZE grid
 	findClosestMultiple(givenNumber, multipleOf) {
 		let closestMultiple;
-		let downFloor = ( givenNumber % multipleOf ) * multipleOf;
+		let downFloor = floor( givenNumber / multipleOf ) * multipleOf;
 		let upFloor = downFloor + multipleOf; 
 
 		abs( givenNumber - downFloor ) > abs( givenNumber - upFloor ) ? closestMultiple = upFloor : closestMultiple = downFloor;
