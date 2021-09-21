@@ -59,15 +59,19 @@ class Game {
 			if (mouseButton === LEFT) {
 				let isIn = false;
 
+				// checks if there already is a wall where user's mouse position is 
 				this.wallSet.forEach(wall => {
 					if ( (mousePositionInGrid.x === wall.x) && (mousePositionInGrid.y === wall.y) ) { isIn = true; return; }
 				});
 
+				// if there is a wall, don't draw another one on top of it -> no need to have multiple walls on the same spot
 				if ( !(isIn) ) { this.wallSet.push(mousePositionInGrid); }
 			}
 
 			if (mouseButton === CENTER) {
+				// loops through all the built walls
 				 for (let i = 0; i < this.wallSet.length; i++) {
+					 // if user's mouse is on a built wall, deletes it
 					 if (mousePositionInGrid.x === this.wallSet[i].x && mousePositionInGrid.y === this.wallSet[i].y) {
 						this.wallSet.splice(i,1); break;
 					 }
@@ -84,6 +88,7 @@ class Game {
 		}
 	}
 
+	// shows white rectangle in a PIXEL_SIZE grid, where mouse is positioned
 	ShowMouseGrid() {
 		noFill();
 		stroke(255);
@@ -106,6 +111,7 @@ class Game {
 	}
 
 
+	// spawns food in a PIXEL_SIZE grid on an empty space ( where are no walls )
 	spawnFood() {
 		do {
 			this.foodPosition = createVector(
@@ -116,6 +122,7 @@ class Game {
 		while (this.checkFoodPosition());
 	}
 
+	// checks whether this.foodPosition isn't a wall position
 	checkFoodPosition() {
 		let notValid = false;
 		for (let i = 0; i < this.wallSet.length; i++) {
@@ -133,7 +140,6 @@ class Game {
 	}
 
 	// returns the closest multiple of a givenNumber
-	// used in order to spawn food on PIXEL_SIZE grid
 	findClosestMultiple(givenNumber, multipleOf) {
 		let closestMultiple;
 		let downFloor = floor( givenNumber / multipleOf ) * multipleOf;
@@ -174,10 +180,8 @@ class Snake {
 	}
 
 	IsCollision() {
-		// console.log(`head_x: ${this.headBodyPart.position.x} head_y: ${this.headBodyPart.position.y}`);
 		// checks if some of snake's bodyPart has same coordinates as it's head -> collision
 		this.bodyArr.slice(1).forEach(bodyPart => {
-			// console.log(`x: ${bodyPart.position.x} y: ${bodyPart.position.y}`);
 			if ( this.headBodyPart.position.x === bodyPart.position.x && this.headBodyPart.position.y === bodyPart.position.y ) {
 				GAME_STATE = gameStates.DEAD;
 			}
@@ -209,6 +213,7 @@ class Snake {
 		// move in the specified direction
 		for(let i = 0; i < this.bodyArr.length; i++) {
 			let bodyPart = this.bodyArr[i];
+			// snake has to teleport to the other side
 			bodyPart.position.x >= 0 ? bodyPart.position.x = ( bodyPart.position.x + bodyPart.direction.x * PIXEL_SIZE ) % CANVAS_WIDTH : bodyPart.position.x = CANVAS_WIDTH - PIXEL_SIZE;
 			bodyPart.position.y >= 0 ? bodyPart.position.y = ( bodyPart.position.y + bodyPart.direction.y * PIXEL_SIZE ) % CANVAS_HEIGHT : bodyPart.position.y = CANVAS_HEIGHT - PIXEL_SIZE;
 		}
@@ -224,7 +229,6 @@ class Snake {
 	}
 
 	Show() {
-		// draws the snake
 		noStroke();
 		fill(SNAKE_COLOR);
 		this.bodyArr.forEach(bodyPart => {
@@ -234,6 +238,7 @@ class Snake {
 }
 
 
+// in game states. Handled in GAME.Run()
 const gameStates = {DEAD : 0, ALIVE : 1, EDIT : 2};
 
 let GAME;
@@ -278,6 +283,7 @@ function setup() {
 }
 
 function draw() {
+	// refreshing the background to allow animations ( deleting what has been drawn in a previous frame )
 	background(CANVAS_COLOR);
 	GAME.Run();
 }
