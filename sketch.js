@@ -23,10 +23,7 @@ class Game {
 				break;
 			
 			case gameStates.EDIT:
-				background(CANVAS_COLOR);
-				frameRate(144);
-				this.ShowWalls();
-				this.AddWalls();
+				this.EditWalls();
 				break;
 
 			case gameStates.DEAD:
@@ -50,27 +47,34 @@ class Game {
 		GAME_STATE = gameStates.ALIVE;
 	}
 
-	AddWalls() {
+	EditWalls() {
 		//let wallPosition = createVector(floor(mouseX), floor(mouseY));
+		this.mousePositionInGrid = createVector(this.findClosestMultiple(mouseX, PIXEL_SIZE), this.findClosestMultiple(mouseY, PIXEL_SIZE));
 		if (mouseIsPressed) {
-			this.mousePositionInGrid = createVector(this.findClosestMultiple(mouseX, PIXEL_SIZE), this.findClosestMultiple(mouseY, PIXEL_SIZE));
+			noStroke();
+
 			if (mouseButton === LEFT) {
-				this.wallSet.push(this.mousePositionInGrid);
+				fill(200);
+				let isIn = false;
+
+				this.wallSet.forEach(wall => {
+					if ( (this.mousePositionInGrid.x === wall.x) && (this.mousePositionInGrid.y === wall.y) ) { isIn = true; return; }
+				});
+
+				if ( !(isIn) ) { this.wallSet.push(this.mousePositionInGrid); }
 			}
 
 			if (mouseButton === CENTER) {
-				for (let i = 0; i < this.wallSet.length; i++) {
-					let wall = this.wallSet[i];
-					if (this.mousePositionInGrid.x === wall.x && this.mousePositionInGrid.y === wall.y) {
-						this.wallSet.pop(i);
-						break;
-					}
-				}
+ 				fill(CANVAS_COLOR);
 
-				fill(color(0,255,255));
-				noStroke();
-				rect(this.mousePositionInGrid.x, this.mousePositionInGrid.y, PIXEL_SIZE);
+				 for (let i = 0; i < this.wallSet.length; i++) {
+					 if (this.mousePositionInGrid.x === this.wallSet[i].x && this.mousePositionInGrid.y === this.wallSet[i].y) {
+						this.wallSet.splice(i,1); break;
+					 }
+				 }
 			}
+
+			rect(this.mousePositionInGrid.x, this.mousePositionInGrid.y, PIXEL_SIZE);
 		}
 	}
 
@@ -116,8 +120,6 @@ class Game {
 		}
 		return notValid;
 	}
-
-
 
 	// returns the closest multiple of a givenNumber
 	// used in order to spawn food on PIXEL_SIZE grid
