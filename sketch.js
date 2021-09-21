@@ -7,7 +7,6 @@ class Game {
 	}
 
 	wallSet;
-	wallPosition;
 	foodPosition;
 	snake;
 
@@ -18,72 +17,84 @@ class Game {
 				this.snake.Move();
 				this.snake.Show();
 				this.snake.IsCollision();
+
 				this.FoodEaten();
 				this.ShowWalls();
+				this.ShowFood();
 				break;
 			
 			case gameStates.EDIT:
 				this.EditWalls();
+				this.ShowWalls();
+				this.ShowMouseGrid();
 				break;
 
 			case gameStates.DEAD:
-				// empty, it is sufficient enough not to run any functions in case ALIVE
+				this.snake.Show();
+				this.ShowFood();
+				this.ShowWalls();
 				break;
 		}
 	}
 
 	RestartScene() {
+		NEW_DIRECTION = createVector(-1,0);
 		let snakeBody = [
-			new BodyPart(createVector(CANVAS_WIDTH - 5*PIXEL_SIZE, CANVAS_HEIGHT / 2), createVector(-1,0)),
-			new BodyPart(createVector(CANVAS_WIDTH - 4*PIXEL_SIZE, CANVAS_HEIGHT / 2), createVector(-1,0)),
-			new BodyPart(createVector(CANVAS_WIDTH - 3*PIXEL_SIZE, CANVAS_HEIGHT / 2), createVector(-1,0)),
-			new BodyPart(createVector(CANVAS_WIDTH - 2*PIXEL_SIZE, CANVAS_HEIGHT / 2), createVector(-1,0)),
+			new BodyPart(createVector(CANVAS_WIDTH - 5*PIXEL_SIZE, CANVAS_HEIGHT / 2), NEW_DIRECTION), 
+			new BodyPart(createVector(CANVAS_WIDTH - 4*PIXEL_SIZE, CANVAS_HEIGHT / 2), NEW_DIRECTION),
+			new BodyPart(createVector(CANVAS_WIDTH - 3*PIXEL_SIZE, CANVAS_HEIGHT / 2), NEW_DIRECTION), 
+			new BodyPart(createVector(CANVAS_WIDTH - 2*PIXEL_SIZE, CANVAS_HEIGHT / 2), NEW_DIRECTION),
 		];
 
 		this.snake = new Snake(snakeBody);
 		this.spawnFood();
-		NEW_DIRECTION = createVector(-1,0);
 
 		GAME_STATE = gameStates.ALIVE;
 	}
 
 	EditWalls() {
-		//let wallPosition = createVector(floor(mouseX), floor(mouseY));
-		this.mousePositionInGrid = createVector(this.findClosestMultiple(mouseX, PIXEL_SIZE), this.findClosestMultiple(mouseY, PIXEL_SIZE));
-		if (mouseIsPressed) {
-			noStroke();
+		let mousePositionInGrid = this.getMousePositionInGrid(); 
 
+		if (mouseIsPressed) {
 			if (mouseButton === LEFT) {
-				fill(200);
 				let isIn = false;
 
 				this.wallSet.forEach(wall => {
-					if ( (this.mousePositionInGrid.x === wall.x) && (this.mousePositionInGrid.y === wall.y) ) { isIn = true; return; }
+					if ( (mousePositionInGrid.x === wall.x) && (mousePositionInGrid.y === wall.y) ) { isIn = true; return; }
 				});
 
-				if ( !(isIn) ) { this.wallSet.push(this.mousePositionInGrid); }
+				if ( !(isIn) ) { this.wallSet.push(mousePositionInGrid); }
 			}
 
 			if (mouseButton === CENTER) {
- 				fill(CANVAS_COLOR);
-
 				 for (let i = 0; i < this.wallSet.length; i++) {
-					 if (this.mousePositionInGrid.x === this.wallSet[i].x && this.mousePositionInGrid.y === this.wallSet[i].y) {
+					 if (mousePositionInGrid.x === this.wallSet[i].x && mousePositionInGrid.y === this.wallSet[i].y) {
 						this.wallSet.splice(i,1); break;
 					 }
 				 }
 			}
-
-			rect(this.mousePositionInGrid.x, this.mousePositionInGrid.y, PIXEL_SIZE);
 		}
 	}
 
 	ShowWalls() {
 		for (let wall of this.wallSet) {
-			fill(200);
 			noStroke();
+			fill(200);
 			rect(wall.x, wall.y, PIXEL_SIZE);
 		}
+	}
+
+	ShowMouseGrid() {
+		noFill();
+		stroke(255);
+		let mousePositionInGrid = this.getMousePositionInGrid();
+		rect(mousePositionInGrid.x, mousePositionInGrid.y, PIXEL_SIZE);
+	}
+
+	ShowFood() {
+		fill(FOOD_COLOR);
+		noStroke();
+		rect(this.foodPosition.x, this.foodPosition.y, PIXEL_SIZE, PIXEL_SIZE);
 	}
 
 	FoodEaten() {
@@ -92,10 +103,6 @@ class Game {
 			this.spawnFood();
 			this.snake.Grow();
 		}
-
-		fill(FOOD_COLOR);
-		noStroke();
-		rect(this.foodPosition.x, this.foodPosition.y, PIXEL_SIZE, PIXEL_SIZE);
 	}
 
 
@@ -121,6 +128,10 @@ class Game {
 		return notValid;
 	}
 
+	getMousePositionInGrid() {
+		return createVector(this.findClosestMultiple(mouseX - PIXEL_SIZE / 2, PIXEL_SIZE) , this.findClosestMultiple(mouseY - PIXEL_SIZE / 2, PIXEL_SIZE)); 
+	}
+
 	// returns the closest multiple of a givenNumber
 	// used in order to spawn food on PIXEL_SIZE grid
 	findClosestMultiple(givenNumber, multipleOf) {
@@ -133,12 +144,16 @@ class Game {
 	}
 }
 
+
 // internally used in Snake
 class BodyPart {
 	constructor(position, direction) {
 		this.position = position;
 		this.direction = direction;
 	}
+	
+	position;
+	direction;
 }
 
 class Snake {
@@ -155,7 +170,7 @@ class Snake {
 	ChangeDirection(newDirection) {
 		// it is not allowed to move backwards
 		let notAllowed = createVector((-1 * this.headBodyPart.direction.x), (-1 * this.headBodyPart.direction.y));
-		if (newDirection.x !== notAllowed.x && newDirection.y !== notAllowed.y) { this.headBodyPart.direction = newDirection; };
+		if (newDirection.x !== notAllowed.x && newDirection.y !== notAllowed.y) { this.headBodyPart.direction = newDirection; }
 	}
 
 	IsCollision() {
@@ -210,7 +225,6 @@ class Snake {
 
 	Show() {
 		// draws the snake
-		background(CANVAS_COLOR);
 		noStroke();
 		fill(SNAKE_COLOR);
 		this.bodyArr.forEach(bodyPart => {
@@ -246,12 +260,9 @@ function setup() {
 	SNAKE_COLOR = color(255,240,254);
 	FOOD_COLOR = color(255,148,46);
 
-
-	frameRate(10);
 	GAME_STATE = gameStates.ALIVE;
+	NEW_DIRECTION = createVector(-1,0);
 
-	createCanvas(CANVAS_HEIGHT, CANVAS_WIDTH);
-	background(CANVAS_COLOR);
 
 	let snakeBody = [
 		new BodyPart(createVector(CANVAS_WIDTH - 5*PIXEL_SIZE, CANVAS_HEIGHT / 2), createVector(-1,0)),
@@ -261,10 +272,13 @@ function setup() {
 	];
 
 	GAME = new Game(new Snake(snakeBody));
-	NEW_DIRECTION = createVector(-1,0);
+
+	frameRate(10);
+	createCanvas(CANVAS_HEIGHT, CANVAS_WIDTH);
 }
 
 function draw() {
+	background(CANVAS_COLOR);
 	GAME.Run();
 }
 
