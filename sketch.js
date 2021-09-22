@@ -1,12 +1,54 @@
 class myMath {
 	// returns the closest multiple of a givenNumber
-	findClosestMultiple(givenNumber, multipleOf) {
+	FindClosestMultiple(givenNumber, multipleOf) {
 		let closestMultiple;
 		let downFloor = floor( givenNumber / multipleOf ) * multipleOf;
 		let upFloor = downFloor + multipleOf; 
 
 		abs( givenNumber - downFloor ) > abs( givenNumber - upFloor ) ? closestMultiple = upFloor : closestMultiple = downFloor;
 		return closestMultiple;
+	}
+
+	GetMirroredVector(vector) {
+		let shift;
+		let transformMatrix = [];
+		let mirroredVectorArr;
+
+		switch(MIRROR_STATE){
+			case mirrorStates.NONE:
+				return vector;
+
+			case mirrorStates.X:
+				shift = this.FindClosestMultiple(CANVAS_HEIGHT / 2, PIXEL_SIZE);
+				transformMatrix.push([1,0], [0,-1]);
+				break;
+
+			case mirrorStates.Y:
+				shift = this.FindClosestMultiple(CANVAS_WIDTH / 2, PIXEL_SIZE);
+				transformMatrix.push([-1,0], [0,1]);
+				break;
+		}
+
+		mirroredVectorArr = this.matrixVectorMultiply2D( transformMatrix, [ vector.x - shift, vector.y - shift ] );
+		return createVector( mirroredVectorArr[0] + shift, mirroredVectorArr[1] + shift );
+	}
+
+	/* matrices must be a 2D array */
+	matrixVectorMultiply2D(m, v) {
+		const dimension = 2;
+		let m1 = m; let m2 = [[ v[0], v[1] ], [ v[0], v[1] ]];
+		let rowSum;
+		let resultVector2D = [];
+
+		for (let i = 0; i < dimension; i++) {
+			rowSum = 0;
+			for (let j = 0; j < dimension; j++) {
+				rowSum = rowSum + ( m1[i][j] * m2[j][i] );
+			}
+			resultVector2D.push(rowSum);
+		}
+
+		return resultVector2D;
 	}
 }
 
@@ -67,10 +109,10 @@ class Game {
 	RestartScene() {
 		NEW_DIRECTION = createVector(-1,0);
 		let snakeBody = [
-			new BodyPart(createVector(CANVAS_WIDTH - 5*PIXEL_SIZE, MY_MATH.findClosestMultiple(CANVAS_HEIGHT / 2, PIXEL_SIZE)), NEW_DIRECTION), 
-			new BodyPart(createVector(CANVAS_WIDTH - 4*PIXEL_SIZE, MY_MATH.findClosestMultiple(CANVAS_HEIGHT / 2, PIXEL_SIZE)), NEW_DIRECTION),
-			new BodyPart(createVector(CANVAS_WIDTH - 3*PIXEL_SIZE, MY_MATH.findClosestMultiple(CANVAS_HEIGHT / 2, PIXEL_SIZE)), NEW_DIRECTION), 
-			new BodyPart(createVector(CANVAS_WIDTH - 2*PIXEL_SIZE, MY_MATH.findClosestMultiple(CANVAS_HEIGHT / 2, PIXEL_SIZE)), NEW_DIRECTION),
+			new BodyPart(createVector(CANVAS_WIDTH - 5*PIXEL_SIZE, MY_MATH.FindClosestMultiple(CANVAS_HEIGHT / 2, PIXEL_SIZE)), NEW_DIRECTION), 
+			new BodyPart(createVector(CANVAS_WIDTH - 4*PIXEL_SIZE, MY_MATH.FindClosestMultiple(CANVAS_HEIGHT / 2, PIXEL_SIZE)), NEW_DIRECTION),
+			new BodyPart(createVector(CANVAS_WIDTH - 3*PIXEL_SIZE, MY_MATH.FindClosestMultiple(CANVAS_HEIGHT / 2, PIXEL_SIZE)), NEW_DIRECTION), 
+			new BodyPart(createVector(CANVAS_WIDTH - 2*PIXEL_SIZE, MY_MATH.FindClosestMultiple(CANVAS_HEIGHT / 2, PIXEL_SIZE)), NEW_DIRECTION),
 		];
 
 		this.snake = new Snake(snakeBody);
@@ -81,6 +123,7 @@ class Game {
 
 	EditWalls() {
 		let mousePositionInGrid = this.getMousePositionInGrid(); 
+		let mirroredVector = MY_MATH.GetMirroredVector(mousePositionInGrid);
 
 		if (mouseIsPressed) {
 			if (mouseButton === LEFT) {
@@ -92,17 +135,26 @@ class Game {
 				});
 
 				// if there is a wall, don't draw another one on top of it -> no need to have multiple walls on the same spot
-				if ( !(isIn) ) { this.wallSet.push(mousePositionInGrid); }
+				if ( !(isIn) ) {
+					this.wallSet.push(mousePositionInGrid);
+
+					if (MIRROR_STATE !== mirrorStates.NONE) { this.wallSet.push(mirroredVector) }
+				}
 			}
 
 			if (mouseButton === CENTER) {
 				// loops through all the built walls
-				 for (let i = 0; i < this.wallSet.length; i++) {
-					 // if user's mouse is on a built wall, deletes it
-					 if (mousePositionInGrid.x === this.wallSet[i].x && mousePositionInGrid.y === this.wallSet[i].y) {
-						this.wallSet.splice(i,1); break;
-					 }
-				 }
+				for (let i = 0; i < this.wallSet.length; i++) {
+					// if user's mouse is on a built wall, deletes it
+					if (mousePositionInGrid.x === this.wallSet[i].x && mousePositionInGrid.y === this.wallSet[i].y) { this.wallSet.splice(i,1); break; }
+				}
+
+				if (MIRROR_STATE !== mirrorStates.NONE) {
+					for (let i = 0; i < this.wallSet.length; i++) {
+						// removes the mirrored vector
+						if (mirroredVector.x === this.wallSet[i].x && mirroredVector.y === this.wallSet[i].y) { this.wallSet.splice(i,1); break; }
+					}
+				}
 			}
 		}
 	}
@@ -120,7 +172,10 @@ class Game {
 		noFill();
 		stroke(255);
 		let mousePositionInGrid = this.getMousePositionInGrid();
+		let mirroredMousePositionInGrid = MY_MATH.GetMirroredVector(mousePositionInGrid);
+
 		rect(mousePositionInGrid.x, mousePositionInGrid.y, PIXEL_SIZE);
+		rect(mirroredMousePositionInGrid.x, mirroredMousePositionInGrid.y, PIXEL_SIZE);
 	}
 
 	ShowFood() {
@@ -133,11 +188,11 @@ class Game {
 		fill(color(57 + 20,42 + 20,69 + 20));
 		noStroke();
 		for (let x = 0; x < CANVAS_WIDTH; x += PIXEL_SIZE) {
-			rect(x, MY_MATH.findClosestMultiple(CANVAS_HEIGHT / 2, PIXEL_SIZE), PIXEL_SIZE);
+			rect(x, MY_MATH.FindClosestMultiple(CANVAS_HEIGHT / 2, PIXEL_SIZE), PIXEL_SIZE);
 		}
 
 		for (let y = 0; y < CANVAS_WIDTH; y += PIXEL_SIZE) {
-			rect(MY_MATH.findClosestMultiple(CANVAS_WIDTH / 2, PIXEL_SIZE), y, PIXEL_SIZE);
+			rect(MY_MATH.FindClosestMultiple(CANVAS_WIDTH / 2, PIXEL_SIZE), y, PIXEL_SIZE);
 		}
 	}
 
@@ -154,8 +209,8 @@ class Game {
 	spawnFood() {
 		do {
 			this.foodPosition = createVector(
-				MY_MATH.findClosestMultiple(floor(random(CANVAS_WIDTH - PIXEL_SIZE)), PIXEL_SIZE),
-				MY_MATH.findClosestMultiple(floor(random(CANVAS_HEIGHT - PIXEL_SIZE)), PIXEL_SIZE)
+				MY_MATH.FindClosestMultiple(floor(random(CANVAS_WIDTH - PIXEL_SIZE)), PIXEL_SIZE),
+				MY_MATH.FindClosestMultiple(floor(random(CANVAS_HEIGHT - PIXEL_SIZE)), PIXEL_SIZE)
 			);
 		}
 		while (this.checkFoodPosition());
@@ -175,7 +230,7 @@ class Game {
 	}
 
 	getMousePositionInGrid() {
-		return createVector(MY_MATH.findClosestMultiple(mouseX - PIXEL_SIZE / 2, PIXEL_SIZE) , MY_MATH.findClosestMultiple(mouseY - PIXEL_SIZE / 2, PIXEL_SIZE)); 
+		return createVector(MY_MATH.FindClosestMultiple(mouseX - PIXEL_SIZE / 2, PIXEL_SIZE) , MY_MATH.FindClosestMultiple(mouseY - PIXEL_SIZE / 2, PIXEL_SIZE)); 
 	}
 
 }
@@ -269,9 +324,11 @@ class Snake {
 
 // in game states. Handled in GAME.Run()
 const gameStates = {DEAD : 0, ALIVE : 1, EDIT : 2};
+const mirrorStates = {X : 0, Y : 1, NONE : 2};
 
 let GAME;
 let GAME_STATE;
+let MIRROR_STATE;
 // has to be global, because keyPressed() is global
 let NEW_DIRECTION;
 
@@ -297,16 +354,17 @@ function setup() {
 	FOOD_COLOR = color(255,148,46);
 
 	GAME_STATE = gameStates.ALIVE;
-	NEW_DIRECTION = createVector(-1,0);
+	MIRROR_STATE = mirrorStates.NONE;
 
+	NEW_DIRECTION = createVector(-1,0);
 	MY_MATH = new myMath();
 
 
 	let snakeBody = [
-		new BodyPart(createVector(CANVAS_WIDTH - 5*PIXEL_SIZE, MY_MATH.findClosestMultiple(CANVAS_HEIGHT / 2, PIXEL_SIZE)), NEW_DIRECTION), 
-		new BodyPart(createVector(CANVAS_WIDTH - 4*PIXEL_SIZE, MY_MATH.findClosestMultiple(CANVAS_HEIGHT / 2, PIXEL_SIZE)), NEW_DIRECTION),
-		new BodyPart(createVector(CANVAS_WIDTH - 3*PIXEL_SIZE, MY_MATH.findClosestMultiple(CANVAS_HEIGHT / 2, PIXEL_SIZE)), NEW_DIRECTION), 
-		new BodyPart(createVector(CANVAS_WIDTH - 2*PIXEL_SIZE, MY_MATH.findClosestMultiple(CANVAS_HEIGHT / 2, PIXEL_SIZE)), NEW_DIRECTION),
+		new BodyPart(createVector(CANVAS_WIDTH - 5*PIXEL_SIZE, MY_MATH.FindClosestMultiple(CANVAS_HEIGHT / 2, PIXEL_SIZE)), NEW_DIRECTION), 
+		new BodyPart(createVector(CANVAS_WIDTH - 4*PIXEL_SIZE, MY_MATH.FindClosestMultiple(CANVAS_HEIGHT / 2, PIXEL_SIZE)), NEW_DIRECTION),
+		new BodyPart(createVector(CANVAS_WIDTH - 3*PIXEL_SIZE, MY_MATH.FindClosestMultiple(CANVAS_HEIGHT / 2, PIXEL_SIZE)), NEW_DIRECTION), 
+		new BodyPart(createVector(CANVAS_WIDTH - 2*PIXEL_SIZE, MY_MATH.FindClosestMultiple(CANVAS_HEIGHT / 2, PIXEL_SIZE)), NEW_DIRECTION),
 	];
 
 	GAME = new Game(new Snake(snakeBody));
@@ -351,23 +409,34 @@ function keyPressed() {
 const shuffleWalls = document.getElementById('shuffleWalls');
 const editMode = document.getElementById('editMode'); 
 const playMode = document.getElementById('playMode');
+const mirrorShuffle = document.getElementById('mirrorAxesShuffle');
 
-shuffleWalls.disabled = true;
+// shuffleWalls.disabled = true;
 
 // EVENT LISTENERS
 editMode.onclick = function() {
 	GAME_STATE = gameStates.EDIT;
-	shuffleWalls.disabled = false;
+	// shuffleWalls.disabled = false;
 	frameRate(144);
 }
 
 playMode.onclick = function() {
-	shuffleWalls.disabled = true;
+	// shuffleWalls.disabled = true;
 	GAME_STATE = gameStates.ALIVE;
 	frameRate(10);
 	GAME.RestartScene();
 }
 
-shuffleWalls.onclick() = function() {
-
+mirrorShuffle.onclick = function() {
+	switch(MIRROR_STATE) {
+		case mirrorStates.X:
+			MIRROR_STATE = mirrorStates.Y;
+			break;
+		case mirrorStates.Y:
+			MIRROR_STATE = mirrorStates.NONE;
+			break;
+		case mirrorStates.NONE:
+			MIRROR_STATE = mirrorStates.X;
+			break;
+	}
 }
