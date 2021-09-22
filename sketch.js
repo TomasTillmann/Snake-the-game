@@ -1,3 +1,15 @@
+class myMath {
+	// returns the closest multiple of a givenNumber
+	findClosestMultiple(givenNumber, multipleOf) {
+		let closestMultiple;
+		let downFloor = floor( givenNumber / multipleOf ) * multipleOf;
+		let upFloor = downFloor + multipleOf; 
+
+		abs( givenNumber - downFloor ) > abs( givenNumber - upFloor ) ? closestMultiple = upFloor : closestMultiple = downFloor;
+		return closestMultiple;
+	}
+}
+
 class Game {
 	// first time when the food is spawned on the scene
 	constructor(snake) {
@@ -21,11 +33,16 @@ class Game {
 				this.FoodEaten();
 				this.ShowWalls();
 				this.ShowFood();
+
 				break;
 			
 			case gameStates.EDIT:
 				this.EditWalls();
+
+				// note that the ordering of Show function is important. It dictates layering.
+				this.ShowCentralAxes();
 				this.ShowWalls();
+				this.ShowGrid(PIXEL_SIZE);
 				this.ShowMouseGrid();
 				break;
 
@@ -37,13 +54,23 @@ class Game {
 		}
 	}
 
+	ShowGrid(pixelSize) {
+		for (let x = 0; x < CANVAS_WIDTH; x += pixelSize) {
+			for (let y = 0; y < CANVAS_HEIGHT; y += pixelSize) {
+				noFill();
+				stroke(157,151,186);
+				rect(x,y, pixelSize);
+			}
+		}
+	}
+
 	RestartScene() {
 		NEW_DIRECTION = createVector(-1,0);
 		let snakeBody = [
-			new BodyPart(createVector(CANVAS_WIDTH - 5*PIXEL_SIZE, CANVAS_HEIGHT / 2), NEW_DIRECTION), 
-			new BodyPart(createVector(CANVAS_WIDTH - 4*PIXEL_SIZE, CANVAS_HEIGHT / 2), NEW_DIRECTION),
-			new BodyPart(createVector(CANVAS_WIDTH - 3*PIXEL_SIZE, CANVAS_HEIGHT / 2), NEW_DIRECTION), 
-			new BodyPart(createVector(CANVAS_WIDTH - 2*PIXEL_SIZE, CANVAS_HEIGHT / 2), NEW_DIRECTION),
+			new BodyPart(createVector(CANVAS_WIDTH - 5*PIXEL_SIZE, MY_MATH.findClosestMultiple(CANVAS_HEIGHT / 2, PIXEL_SIZE)), NEW_DIRECTION), 
+			new BodyPart(createVector(CANVAS_WIDTH - 4*PIXEL_SIZE, MY_MATH.findClosestMultiple(CANVAS_HEIGHT / 2, PIXEL_SIZE)), NEW_DIRECTION),
+			new BodyPart(createVector(CANVAS_WIDTH - 3*PIXEL_SIZE, MY_MATH.findClosestMultiple(CANVAS_HEIGHT / 2, PIXEL_SIZE)), NEW_DIRECTION), 
+			new BodyPart(createVector(CANVAS_WIDTH - 2*PIXEL_SIZE, MY_MATH.findClosestMultiple(CANVAS_HEIGHT / 2, PIXEL_SIZE)), NEW_DIRECTION),
 		];
 
 		this.snake = new Snake(snakeBody);
@@ -102,6 +129,18 @@ class Game {
 		rect(this.foodPosition.x, this.foodPosition.y, PIXEL_SIZE, PIXEL_SIZE);
 	}
 
+	ShowCentralAxes() {
+		fill(color(57 + 20,42 + 20,69 + 20));
+		noStroke();
+		for (let x = 0; x < CANVAS_WIDTH; x += PIXEL_SIZE) {
+			rect(x, MY_MATH.findClosestMultiple(CANVAS_HEIGHT / 2, PIXEL_SIZE), PIXEL_SIZE);
+		}
+
+		for (let y = 0; y < CANVAS_WIDTH; y += PIXEL_SIZE) {
+			rect(MY_MATH.findClosestMultiple(CANVAS_WIDTH / 2, PIXEL_SIZE), y, PIXEL_SIZE);
+		}
+	}
+
 	FoodEaten() {
 		// if snake's head has the same position as food
 		if (this.snake.headBodyPart.position.x === this.foodPosition.x && this.snake.headBodyPart.position.y === this.foodPosition.y) {
@@ -115,8 +154,8 @@ class Game {
 	spawnFood() {
 		do {
 			this.foodPosition = createVector(
-				this.findClosestMultiple(floor(random(CANVAS_WIDTH - PIXEL_SIZE)), PIXEL_SIZE),
-				this.findClosestMultiple(floor(random(CANVAS_HEIGHT - PIXEL_SIZE)), PIXEL_SIZE)
+				MY_MATH.findClosestMultiple(floor(random(CANVAS_WIDTH - PIXEL_SIZE)), PIXEL_SIZE),
+				MY_MATH.findClosestMultiple(floor(random(CANVAS_HEIGHT - PIXEL_SIZE)), PIXEL_SIZE)
 			);
 		}
 		while (this.checkFoodPosition());
@@ -136,20 +175,10 @@ class Game {
 	}
 
 	getMousePositionInGrid() {
-		return createVector(this.findClosestMultiple(mouseX - PIXEL_SIZE / 2, PIXEL_SIZE) , this.findClosestMultiple(mouseY - PIXEL_SIZE / 2, PIXEL_SIZE)); 
+		return createVector(MY_MATH.findClosestMultiple(mouseX - PIXEL_SIZE / 2, PIXEL_SIZE) , MY_MATH.findClosestMultiple(mouseY - PIXEL_SIZE / 2, PIXEL_SIZE)); 
 	}
 
-	// returns the closest multiple of a givenNumber
-	findClosestMultiple(givenNumber, multipleOf) {
-		let closestMultiple;
-		let downFloor = floor( givenNumber / multipleOf ) * multipleOf;
-		let upFloor = downFloor + multipleOf; 
-
-		abs( givenNumber - downFloor ) > abs( givenNumber - upFloor ) ? closestMultiple = upFloor : closestMultiple = downFloor;
-		return closestMultiple;
-	}
 }
-
 
 // internally used in Snake
 class BodyPart {
@@ -255,10 +284,12 @@ let CANVAS_COLOR;
 let SNAKE_COLOR;
 let FOOD_COLOR;
 
+let MY_MATH;
+
 
 function setup() {
-	CANVAS_HEIGHT = 600;
-	CANVAS_WIDTH = 600;
+	CANVAS_HEIGHT = 700;
+	CANVAS_WIDTH = 700;
 	PIXEL_SIZE = 20;
 
 	CANVAS_COLOR = color(57,42,69);
@@ -268,12 +299,14 @@ function setup() {
 	GAME_STATE = gameStates.ALIVE;
 	NEW_DIRECTION = createVector(-1,0);
 
+	MY_MATH = new myMath();
+
 
 	let snakeBody = [
-		new BodyPart(createVector(CANVAS_WIDTH - 5*PIXEL_SIZE, CANVAS_HEIGHT / 2), createVector(-1,0)),
-		new BodyPart(createVector(CANVAS_WIDTH - 4*PIXEL_SIZE, CANVAS_HEIGHT / 2), createVector(-1,0)),
-		new BodyPart(createVector(CANVAS_WIDTH - 3*PIXEL_SIZE, CANVAS_HEIGHT / 2), createVector(-1,0)),
-		new BodyPart(createVector(CANVAS_WIDTH - 2*PIXEL_SIZE, CANVAS_HEIGHT / 2), createVector(-1,0)),
+		new BodyPart(createVector(CANVAS_WIDTH - 5*PIXEL_SIZE, MY_MATH.findClosestMultiple(CANVAS_HEIGHT / 2, PIXEL_SIZE)), NEW_DIRECTION), 
+		new BodyPart(createVector(CANVAS_WIDTH - 4*PIXEL_SIZE, MY_MATH.findClosestMultiple(CANVAS_HEIGHT / 2, PIXEL_SIZE)), NEW_DIRECTION),
+		new BodyPart(createVector(CANVAS_WIDTH - 3*PIXEL_SIZE, MY_MATH.findClosestMultiple(CANVAS_HEIGHT / 2, PIXEL_SIZE)), NEW_DIRECTION), 
+		new BodyPart(createVector(CANVAS_WIDTH - 2*PIXEL_SIZE, MY_MATH.findClosestMultiple(CANVAS_HEIGHT / 2, PIXEL_SIZE)), NEW_DIRECTION),
 	];
 
 	GAME = new Game(new Snake(snakeBody));
@@ -283,7 +316,7 @@ function setup() {
 }
 
 function draw() {
-	// refreshing the background to allow animations ( deleting what has been drawn in a previous frame )
+	// refreshing the background to allow animations ( deletiing what has been drawn in a previous frame )
 	background(CANVAS_COLOR);
 	GAME.Run();
 }
@@ -311,4 +344,30 @@ function keyPressed() {
 	}
 
 	GAME.snake.ChangeDirection(NEW_DIRECTION);
+}
+
+// BUTTONS INTERACTION
+// INIT
+const shuffleWalls = document.getElementById('shuffleWalls');
+const editMode = document.getElementById('editMode'); 
+const playMode = document.getElementById('playMode');
+
+shuffleWalls.disabled = true;
+
+// EVENT LISTENERS
+editMode.onclick = function() {
+	GAME_STATE = gameStates.EDIT;
+	shuffleWalls.disabled = false;
+	frameRate(144);
+}
+
+playMode.onclick = function() {
+	shuffleWalls.disabled = true;
+	GAME_STATE = gameStates.ALIVE;
+	frameRate(10);
+	GAME.RestartScene();
+}
+
+shuffleWalls.onclick() = function() {
+
 }
