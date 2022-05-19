@@ -5,4 +5,4 @@ Snake the game programmed in javascript using p5.js library. There is also a pos
 ## How to run
 * Clone this repo
 * Open index.html in your favorite browser
-* * enjoy!
+* enjoy!
